@@ -10,9 +10,11 @@ const SERVIDOR_PORTA = 3300;
 // habilita ou desabilita a inserção de dados no banco de dados
 const HABILITAR_OPERACAO_INSERIR = true;
 
+let valorAnterior = 0;
+
 // função para comunicação serial
 const serial = async (
-    valoresSensorDigital,
+    valoresSensorBloqueio,
 ) => {
 
     // conexão com o banco de dados MySQL
@@ -20,9 +22,9 @@ const serial = async (
         {
             host: 'localhost',
             user: 'user_insert',
-            password: 'urubu100@',
+            password: 'Urubu100@',
             database: 'logi_dock',
-            port: 3306
+            port: 3307
         }
     ).promise();
 
@@ -50,21 +52,31 @@ const serial = async (
     arduino.pipe(new serialport.ReadlineParser({ delimiter: '\r\n' })).on('data', async (data) => {
         console.log(data);
         const valores = data.split(';');
-        const sensorDigital = parseInt(valores[0]);
+        const sensorBloqueio = parseInt(valores[0]);
 
         // armazena os valores dos sensores nos arrays correspondentes
-        valoresSensorDigital.push(sensorDigital); 
+        valoresSensorBloqueio.push(sensorBloqueio);
 
         // insere os dados no banco de dados (se habilitado)
         if (HABILITAR_OPERACAO_INSERIR) {
+            // este insert irá inserir os dados na tabela historico_sensor"
+            if (sensorBloqueio == 1 && sensorBloqueio != valorAnterior) {
+                await poolBancoDados.execute(
+                    'INSERT INTO historico_sensor (dt_registro, status_sensor, fk_sensor) VALUES (CURRENT_TIMESTAMP,?,1)',
+                    [sensorBloqueio]
+                );
+                valorAnterior = sensorBloqueio;
+                console.log("valores inseridos no banco: " + ", " + sensorBloqueio);
 
-            // este insert irá inserir os dados na tabela "medida"
-            await poolBancoDados.execute(
-                'INSERT INTO sensor (fk_empresa, status_sensor) VALUES (1, ?)',
-                [sensorDigital]
-            );
-            console.log("valores inseridos no banco: " + ", " + sensorDigital);
+            } else if (sensorBloqueio == 0 && sensorBloqueio != valorAnterior) {
+                await poolBancoDados.execute(
+                    'INSERT INTO historico_sensor (dt_registro, status_sensor, fk_sensor) VALUES (CURRENT_TIMESTAMP,?,1)',
+                    [sensorBloqueio]
+                );
 
+                valorAnterior = sensorBloqueio;
+                console.log("valores inseridos no banco: " + ", " + sensorBloqueio);
+            }
         }
 
     });
@@ -77,7 +89,7 @@ const serial = async (
 
 // função para criar e configurar o servidor web
 const servidor = (
-    valoresSensorDigital
+    valoresSensorBloqueio
 ) => {
     const app = express();
 
@@ -94,23 +106,23 @@ const servidor = (
     });
 
     // define os endpoints da API para cada tipo de sensor
-    app.get('/sensores/digital', (_, response) => {
-        return response.json(valoresSensorDigital);
+    app.get('/sensores/bloqueio', (_, response) => {
+        return response.json(valoresSensorBloqueio);
     });
 }
 
 // função principal assíncrona para iniciar a comunicação serial e o servidor web
 (async () => {
     // arrays para armazenar os valores dos sensores
-    const valoresSensorDigital = [];
+    const valoresSensorBloqueio = [];
 
     // inicia a comunicação serial
     await serial(
-        valoresSensorDigital
+        valoresSensorBloqueio
     );
 
     // inicia o servidor web
     servidor(
-        valoresSensorDigital
+        valoresSensorBloqueio
     );
 })();

@@ -11,15 +11,12 @@
     <h1>Logi Dock</h1>
     <div style="display: flex;">
         <div style="width: 50%;">
-            <canvas id="sensorDigital"></canvas>
-        </div>
-        <div style="width: 50%;">
-            <canvas id="sensorAnalogico"></canvas>
+            <canvas id="sensorBloqueio"></canvas>
         </div>
     </div>
 
     <script>
-        var sensorDigital = new Chart(document.getElementById('sensorDigital').getContext('2d'), {
+        var sensorBloqueio = new Chart(document.getElementById('sensorBloqueio').getContext('2d'), {
             type: 'line',
             data: {
                 datasets: [{
@@ -77,7 +74,7 @@
         }
 
         setInterval(() => {
-            obterDados(sensorDigital, 'digital');
+            obterDados(sensorBloqueio, 'bloqueio');
         }, 1000);
 
     </script>
