@@ -63,7 +63,6 @@ const serial = async (
             if (sensorBloqueio == 1 && sensorBloqueio != valorAnterior) {
                 await poolBancoDados.execute(
                     'INSERT INTO historico_sensor (dt_registro, status_sensor, fk_sensor) VALUES (CURRENT_TIMESTAMP,?,1)',
-                    `INSERT INTO doca (numero_doca, status_doca, fk_empresa) VALUES (${numero_doca},${status_doca},${fk_empresa})`,
                     [sensorBloqueio]
                 );
                 valorAnterior = sensorBloqueio;
@@ -72,7 +71,6 @@ const serial = async (
             } else if (sensorBloqueio == 0 && sensorBloqueio != valorAnterior) {
                 await poolBancoDados.execute(
                     'INSERT INTO historico_sensor (dt_registro, status_sensor, fk_sensor) VALUES (CURRENT_TIMESTAMP,?,1)',
-                     `INSERT INTO doca (numero_doca, status_doca, fk_empresa) VALUES (${numero_doca},${status_doca},${fk_empresa})`,
                     [sensorBloqueio]
                 );
 
